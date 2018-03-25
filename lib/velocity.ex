@@ -9,7 +9,7 @@ defmodule Velocity do
   @doc """
   Gets the velocity for the given sprint.
   The issues in the originally set in the
-  sprint are taken from the given `milestone_id`.
+  sprint are taken from the given `milestone_number.
   GitHub events are traversed all the way back
   to the given `start_time`. From there, closed
   events and labeled events of `uat` are taken
@@ -21,7 +21,7 @@ defmodule Velocity do
   def calculate_sprint_velocity(
         owner,
         repo,
-        milestone_id,
+        milestone_number,
         start_time,
         sprint_length_in_days \\ @sprint_length_in_days
       )
@@ -29,12 +29,12 @@ defmodule Velocity do
   def calculate_sprint_velocity(
         owner,
         repo,
-        milestone_id,
+        milestone_number,
         start_time,
         sprint_length_in_days
       ) do
     with {:ok, %{issues: issues_in_sprint, points: points_in_sprint}} <-
-           get_issues_in_milestone(owner, repo, milestone_id),
+           get_issues_in_milestone(owner, repo, milestone_number),
          end_time = calculate_end_time(start_time, sprint_length_in_days),
          {:ok, events} <- repo_events_in_sprint(owner, repo, start_time, end_time) do
       completed_issues =
@@ -126,11 +126,11 @@ defmodule Velocity do
     Enum.reduce(issues, 0, fn %{points: points}, acc -> acc + points end)
   end
 
-  defp get_issues_in_milestone(owner, repo, milestone_id) do
+  defp get_issues_in_milestone(owner, repo, milestone_number) do
     {:ok, issues} =
       GitHub.repo_issues(owner, repo, %{
         "state" => "all",
-        "milestone" => milestone_id,
+        "milestone" => milestone_number,
         "per_page" => 100
       })
 
